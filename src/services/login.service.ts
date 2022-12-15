@@ -29,5 +29,8 @@ export const mainService = {
 	},
     loginUser: (email: string, password: string) => {
         return mainService.post('https://localhost:7214/User/authenticate', { email, password });
+    },
+    updateConnectionId: (userId: string, connectionId: string) => {
+        return mainService.post('https://localhost:7214/User/connectionid', { userId, connectionId });
     }
 }

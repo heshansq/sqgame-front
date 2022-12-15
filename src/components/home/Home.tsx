@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { HttpTransportType, HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel } from '@microsoft/signalr';
+import { mainService } from "../../services/login.service";
 
 const Home = () => {
 
     const [ connection, setConnection ] = useState<HubConnection | undefined>();
+    const [ connectionId, setConnectionId ] = useState<string | undefined>();
+    const [ userId, setUserId ] = useState<string>();
 
     useEffect(() => {
         let strUserData = localStorage.getItem('userdata');
@@ -15,6 +18,9 @@ const Home = () => {
         }
         console.log('user data::', userData);
         let accessToken = userData.token;
+        if (userData?.user?.id) {
+            setUserId(userData?.user?.id);
+        }
 
         const options: IHttpConnectionOptions = {
             headers: {
@@ -41,14 +47,25 @@ const Home = () => {
             connection.start()
                 .then(result => {
                     console.log('Connected!', result);
-    
-                    connection.on('gameStart', data => {
-                        console.log('response data::', JSON.parse(data));
+                    connection.invoke('GetConnectionId').then((connectionId: any) => {
+                        console.log({connectionId});
+                        setConnectionId(connectionId);
                     });
                 })
                 .catch(e => console.log('Connection failed: ', e));
         }
     }, [connection])
+
+    useEffect(() => {
+        if (userId && connectionId && connection) {
+            mainService.updateConnectionId(userId, connectionId).then((res) => {
+                console.log('updated connection id');
+                connection.on('gameStart', data => {
+                    console.log('response data::', JSON.parse(data));
+                });
+            });
+        }
+    }, [connectionId, connection])
 
     return <p>Home</p>;
 }
