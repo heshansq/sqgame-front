@@ -1,10 +1,18 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import Login from './components/login/Login';
+import Home from './components/home/Home';
 
 function App() {
   return (
-    <div className="App">
+    <Routes>
+      <Route path='/' element={<Login/>} />
+      <Route path='/home' element={<Home/>} />
+    </Routes>
+    /**
+     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
@@ -20,6 +28,8 @@ function App() {
         </a>
       </header>
     </div>
+     * 
+     */
   );
 }
 
