@@ -1,9 +1,19 @@
 import axios from 'axios';
 import { Game } from '../models/game.model';
+import { Todo } from '../models/todo.model';
 import { User } from '../models/user.model';
 
 export const mainService = {
-    request: (url: string, customConfig = {}, fullResponse = false, accessToken: string = '') => {
+    request: (url: string, customConfig = {}, fullResponse = false) => {
+
+		let accessToken = '';
+		let strUserData = localStorage.getItem('userdata');
+        let userData;
+        if (strUserData) {
+            userData = JSON.parse(strUserData);
+			accessToken = userData.token;
+        } 
+
         let config = {
 			url,
 			method: 'get',
@@ -23,6 +33,15 @@ export const mainService = {
     post: (url: string, data = {}, config = {}) => {
 		config = {
 			method: 'POST',
+			data,
+			...config
+		}
+
+		return mainService.request(url, config)
+	},
+	put: (url: string, data = {}, config = {}) => {
+		config = {
+			method: 'PUT',
 			data,
 			...config
 		}
@@ -51,5 +70,14 @@ export const mainService = {
 	},
 	startGame: (game: Game) => {
 		return mainService.post('https://localhost:7214/Game', game);
+	},
+	createTodo: (todo: Todo) => {
+		return mainService.post('https://localhost:7214/Todo', todo);
+	},
+	getAllTodoByUser: (userId: string) => {
+		return mainService.get(`https://localhost:7214/Todo/${userId}`);
+	},
+	updateTodo: (todo: Todo) => {
+		return mainService.put(`https://localhost:7214/Todo/${todo.id}`, todo);
 	}
 }
