@@ -79,5 +79,8 @@ export const mainService = {
 	},
 	updateTodo: (todo: Todo) => {
 		return mainService.put(`https://localhost:7214/Todo/${todo.id}`, todo);
+	},
+	transferCoinsToWinner: (fromAddress: string, toAddress: string, spender: string) => {
+		return mainService.get(`https://localhost:7214/Game/transfertoken/${fromAddress}/${toAddress}/${spender}`);
 	}
 }

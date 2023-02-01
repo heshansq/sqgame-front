@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { mainService } from "../services/main.service";
+import Web3 from "web3";
+import detectEthereumProvider from '@metamask/detect-provider';
 import { HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel } from '@microsoft/signalr';
 const Header = () => {
 
@@ -20,7 +22,7 @@ const Header = () => {
             setUserId(userData?.user?.id);
         } 
 
-        let accessToken = userData.token;
+        let accessToken = userData?.token;
 
         const options: IHttpConnectionOptions = {
             headers: {
@@ -80,6 +82,48 @@ const Header = () => {
         }
     }
 
+    const onWeb3Connect = async () => {
+        /**
+         * 
+         const { ethereum } = window
+        if (ethereum) {
+            let provider = ethereum;
+            if (typeof provider !== "undefined") {
+              await provider.request({ method: "eth_requestAccounts" });
+              const web3 = new Web3(provider);
+              const accounts = await web3.eth.getAccounts();
+              const account = accounts[0];
+              console.log(account);
+            } else {
+              console.log("Non-ethereum browser detected.Please install Metamask");
+            }
+        }
+         */
+
+        if (window.ethereum) {
+            let provider = window.ethereum;
+            if (typeof provider !== "undefined") {
+              await provider.request({ method: "eth_requestAccounts" });
+              const web3 = new Web3(provider);
+              const accounts = await web3.eth.getAccounts();
+              const account = accounts[0];
+              console.log(account);
+            } else {
+              console.log("Non-ethereum browser detected.Please install Metamask");
+            }
+        }
+        
+        /**
+         * 
+         const web3 = await detectEthereumProvider(); // Use Metamask-injected web3
+        if (web3) {
+            await web3.request({ method: 'eth_requestAccounts'});
+            const addresses = await web3.eth.getAccounts();
+        }
+         */
+        
+    };
+
     return (
         <>
             <div className="header-wrapper">
@@ -89,6 +133,9 @@ const Header = () => {
                     </li>
                     <li>
                         <Link to="/">Login</Link>
+                    </li>
+                    <li>
+                        <button onClick={onWeb3Connect}>Connect to metamask</button>
                     </li>
                     {userData ? (
                         <>
