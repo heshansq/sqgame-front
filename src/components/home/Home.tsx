@@ -165,45 +165,6 @@ const Home = () => {
             "type": "function"
         },
         {
-            "inputs": [],
-            "name": "balanceOf",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "balance",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "buy",
-            "outputs": [],
-            "stateMutability": "payable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_useraddress",
-                    "type": "address"
-                }
-            ],
-            "name": "currentBalanceUser",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "balance",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
             "inputs": [
                 {
                     "internalType": "address",
@@ -228,19 +189,6 @@ const Home = () => {
             "type": "function"
         },
         {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "_amount",
-                    "type": "uint256"
-                }
-            ],
-            "name": "sell",
-            "outputs": [],
-            "stateMutability": "payable",
-            "type": "function"
-        },
-        {
             "inputs": [],
             "stateMutability": "nonpayable",
             "type": "constructor"
@@ -260,15 +208,9 @@ const Home = () => {
         },
         {
             "inputs": [],
-            "name": "currentBalance",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "balance",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "nonpayable",
+            "name": "buy",
+            "outputs": [],
+            "stateMutability": "payable",
             "type": "function"
         },
         {
@@ -281,6 +223,19 @@ const Home = () => {
                     "type": "uint256"
                 }
             ],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "sell",
+            "outputs": [],
             "stateMutability": "payable",
             "type": "function"
         },
@@ -361,6 +316,57 @@ const Home = () => {
             "type": "function"
         },
         {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_owner",
+                    "type": "address"
+                }
+            ],
+            "name": "balanceOf",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "currentBalance",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_useraddress",
+                    "type": "address"
+                }
+            ],
+            "name": "currentBalanceUser",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balanceData",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
             "inputs": [],
             "name": "decimals",
             "outputs": [
@@ -414,7 +420,7 @@ const Home = () => {
         }
     ];
 
-    const moneyContractAddress = "0x8a75f9b59dca3cf0f1bedcab737643283806bbfd";
+    const moneyContractAddress = "0xA17BB8896040B2383277cd3Dc7b871Adec5726ED";
 
     const buyTokens = (type = 7, pkdtVal = 0) => {
         if (currentUser) {
@@ -424,6 +430,7 @@ const Home = () => {
                 if (typeof provider !== "undefined") {
                   provider.request({ method: "eth_requestAccounts" }).then(() => {
                     const web3 = new Web3(provider || "https://goerli.etherscan.io");
+                    //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
                     web3.eth.getAccounts().then((accounts) => {
                         const account = accounts[0];
                         console.log('account::::', accounts);
@@ -445,13 +452,13 @@ const Home = () => {
                             });
                         } else if (type === 2) {
                             //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
-                            contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", account, 1).send({from: account}).then((res: any) => {
+                            contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", account, 10).send({from: account}).then((res: any) => {
                                 console.log('coming here123::', res);
                                 buyTokens();
                             });
                         }  else if (type === 3) {
                             //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
-                            contract.methods.approveSpenderFromOwner(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 5).send({from: account}).then((res: any) => {
+                            contract.methods.approveSpenderFromOwner(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 50).send({from: account}).then((res: any) => {
                                 console.log('coming here123::', res);
                                 buyTokens(4);
                             });
@@ -461,7 +468,7 @@ const Home = () => {
                                 console.log('getAllowance', res);
                             });
                         }  else if (type === 5) {
-                            contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",account, 1).send({from: account}).then((res: any) => {
+                            contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",account, 10).send({from: account}).then((res: any) => {
                                 console.log('getAllowance', res);
                             });
                         } else if (type === 6) {
@@ -490,7 +497,7 @@ const Home = () => {
     const onBuyToken = (e: any) => {
         e.preventDefault();
         
-        let pkdtVal = e.target[0].value;
+        let pkdtVal = e.target[0].value * 10;
         if (pkdtVal > 0) {
             buyTokens(1, pkdtVal);
         }
@@ -521,7 +528,7 @@ const Home = () => {
                         {(pokemonBalance) ? (
                             <>
                                 <p>
-                                    My Pokemon Balance: {pokemonBalance}
+                                    My Pokemon Balance: {pokemonBalance / 10}
                                 </p>
                             </>
                         ) : null}
