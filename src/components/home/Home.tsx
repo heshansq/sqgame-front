@@ -112,261 +112,309 @@ const Home = () => {
 
     const gameContractABI: any = [
         {
-          "inputs": [],
-          "stateMutability": "nonpayable",
-          "type": "constructor"
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_spender",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_value",
+                    "type": "uint256"
+                }
+            ],
+            "name": "approveSpenderFromOwner",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "Bought",
-          "type": "event"
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_spender",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_value",
+                    "type": "uint256"
+                }
+            ],
+            "name": "approveSpenderSection",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "Sold",
-          "type": "event"
+            "inputs": [],
+            "name": "balanceOf",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "inputs": [],
-          "name": "token",
-          "outputs": [
-            {
-              "internalType": "contract Token",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function",
-          "constant": true
+            "inputs": [],
+            "name": "buy",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
         },
         {
-          "inputs": [],
-          "name": "buy",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function",
-          "payable": true
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_useraddress",
+                    "type": "address"
+                }
+            ],
+            "name": "currentBalanceUser",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "uint256",
-              "name": "_amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "sell",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function",
-          "payable": true
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_spender",
+                    "type": "address"
+                }
+            ],
+            "name": "getAllowance",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_to",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_from",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "transferSingleTokenToWinner",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "_amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "sell",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_to",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_from",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_spender",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_amount",
-              "type": "uint256"
-            }
-          ],
-          "name": "transferSingleTokenToWinnerWithSpender",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_spender",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_value",
-              "type": "uint256"
-            }
-          ],
-          "name": "approveSpenderSection",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "Bought",
+            "type": "event"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_owner",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_spender",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_value",
-              "type": "uint256"
-            }
-          ],
-          "name": "approveSpenderFromOwner",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [],
+            "name": "currentBalance",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_owner",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "_spender",
-              "type": "address"
-            }
-          ],
-          "name": "getAllowance",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [],
+            "name": "getAmountCheck",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
         },
         {
-          "inputs": [],
-          "name": "getAmountCheck",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "payable",
-          "type": "function",
-          "payable": true
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "Sold",
+            "type": "event"
         },
         {
-          "inputs": [],
-          "name": "currentBalance",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_to",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_from",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "transferSingleTokenToWinner",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "_useraddress",
-              "type": "address"
-            }
-          ],
-          "name": "currentBalanceUser",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_to",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_from",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_spender",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "transferSingleTokenToWinnerWithSpender",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "balance",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "decimals",
+            "outputs": [
+                {
+                    "internalType": "uint8",
+                    "name": "",
+                    "type": "uint8"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "name",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "symbol",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "token",
+            "outputs": [
+                {
+                    "internalType": "contract Token",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
         }
     ];
 
-    const moneyContractAddress = "0x194597Fd39Fe16B1fa424E2b0997a9573d1CAA5B";
+    const moneyContractAddress = "0x8a75f9b59dca3cf0f1bedcab737643283806bbfd";
 
     const buyTokens = (type = 7, pkdtVal = 0) => {
         if (currentUser) {
@@ -375,7 +423,7 @@ const Home = () => {
                 console.log('typeof provider', typeof provider);
                 if (typeof provider !== "undefined") {
                   provider.request({ method: "eth_requestAccounts" }).then(() => {
-                    const web3 = new Web3(provider || "http://127.0.0.1:7545");
+                    const web3 = new Web3(provider || "https://goerli.etherscan.io");
                     web3.eth.getAccounts().then((accounts) => {
                         const account = accounts[0];
                         console.log('account::::', accounts);
@@ -396,17 +444,20 @@ const Home = () => {
                                 console.log('error:::', {error});
                             });
                         } else if (type === 2) {
-                            contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
+                            //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
+                            contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", account, 1).send({from: account}).then((res: any) => {
                                 console.log('coming here123::', res);
                                 buyTokens();
                             });
                         }  else if (type === 3) {
-                            contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
+                            //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
+                            contract.methods.approveSpenderFromOwner(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 5).send({from: account}).then((res: any) => {
                                 console.log('coming here123::', res);
                                 buyTokens(4);
                             });
                         } else if (type === 4) {
-                            contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
+                            //contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
+                            contract.methods.getAllowance(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").call({from: account}).then((res: any) => {
                                 console.log('getAllowance', res);
                             });
                         }  else if (type === 5) {
@@ -414,7 +465,8 @@ const Home = () => {
                                 console.log('getAllowance', res);
                             });
                         } else if (type === 6) {
-                            mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
+                            //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
+                            mainService.transferCoinsToWinner(account, "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4", "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
                                 console.log({res});
                                 buyTokens();
                             });
