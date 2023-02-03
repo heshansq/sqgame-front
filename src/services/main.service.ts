@@ -82,5 +82,11 @@ export const mainService = {
 	},
 	transferCoinsToWinner: (fromAddress: string, toAddress: string, spender: string) => {
 		return mainService.get(`https://localhost:7214/Game/transfertoken/${fromAddress}/${toAddress}/${spender}`);
-	}
+	},
+	updatePublicKey: (userId: string, publicKey: string) => {
+        return mainService.get(`https://localhost:7214/User/updatepublickey/${userId}/${publicKey}`);
+    },
+	acceptGameRequest: (userId: string, gameid: string) => {
+        return mainService.get(`https://localhost:7214/Game/acceptgame/${userId}/${gameid}`);
+    }
 }

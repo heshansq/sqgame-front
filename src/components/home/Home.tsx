@@ -19,6 +19,7 @@ const Home = () => {
     const [ startGame, setStartGame ] = useState<any>();
     const [ newGameBegin, setNewGameBegin ] = useState<any>();
     const [ gameSuccessStart, setGameSuccessStart ] = useState<any>();
+    const [ gameAccept, setGameAccept ] = useState<any>();
     const [ pokemonBalance, setPokemonBalance ] = useState();
 
     useEffect(() => {
@@ -88,6 +89,10 @@ const Home = () => {
                     console.log('response data::', JSON.parse(data));
                     setNewGameBegin(JSON.parse(data));
                 });
+                connection.on('gameAccept', data => {
+                    console.log('gameAccept response data::', JSON.parse(data));
+                    setGameAccept(JSON.parse(data));
+                });
             });
         }
     }, [connectionId, connection])
@@ -106,6 +111,7 @@ const Home = () => {
         mainService.startGame(game).then((response: any) => {
             console.log('response:::', {response});
             setGameSuccessStart(response);
+            onStartTheGame();
         });
         console.log('game data:::', game);
     }
@@ -434,6 +440,11 @@ const Home = () => {
                     web3.eth.getAccounts().then((accounts) => {
                         const account = accounts[0];
                         console.log('account::::', accounts);
+
+                        mainService.updatePublicKey(currentUser.id, account).then((updateSuccess) => {
+                            console.log('user update success', {updateSuccess});
+                        });
+
                         const contract: any = new web3.eth.Contract(gameContractABI, moneyContractAddress);
                         console.log('contract comes::', contract);
 
@@ -473,7 +484,16 @@ const Home = () => {
                             });
                         } else if (type === 6) {
                             //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
-                            mainService.transferCoinsToWinner(account, "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4", "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
+                            let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
+                            if (gameAccept?.opuserpublickey === account) {
+                                console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account}, {startpublickey: gameAccept?.startuserpublickey});
+                                wonPublicKey = gameAccept?.startuserpublickey;
+                            } else {
+                                console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account}, {startpublickey: gameAccept?.startuserpublickey});
+                                wonPublicKey = gameAccept?.opuserpublickey;
+                            }
+
+                            mainService.transferCoinsToWinner(account, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
                                 console.log({res});
                                 buyTokens();
                             });
@@ -509,6 +529,16 @@ const Home = () => {
 
     const onLostGame = () => {
         buyTokens(6);
+    }
+
+    const onGameRequest = (isStart = false) => {
+        if (isStart && userId) {
+            console.log({newGameBegin});
+            mainService.acceptGameRequest(userId, newGameBegin?.gameId).then((res: any) => {
+                console.log('Accepted', {res});
+                onStartTheGame();
+            });
+        }
     }
 
     useEffect(() => {
@@ -563,10 +593,10 @@ const Home = () => {
                     ) : null}
                     
                 </div>
-                {(!gameSuccessStart && newGameBegin) ? (
+                {(!gameSuccessStart && newGameBegin && !gameAccept) ? (
                     <>
                         You have Received new Game Request, Do you want to Accept it?
-                        <button>Accept</button>
+                        <button onClick={() => { onGameRequest(true) }}>Accept</button>
                         <button>Reject</button>
                     </>
                 ) : null}
@@ -589,6 +619,12 @@ const Home = () => {
                         ) : null)}
                     </>
                 ))}
+                {(gameAccept ? (
+                    <>
+                        <button onClick={onLostGame}>I Won the Game</button>
+                        <button onClick={onLostGame}>I Lost the Game</button>
+                    </>
+                ) : null)}
                 
             </div>
         </>
