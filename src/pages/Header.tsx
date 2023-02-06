@@ -14,7 +14,10 @@ const Header = () => {
     const [ newGameBegin, setNewGameBegin ] = useState<any>();
     const [ gameAccept, setGameAccept ] = useState<any>();
     const [ currentUser, setCurrentUser ] = useState<any>();
-    const [ pokemonBalance, setPokemonBalance ] = useState();
+    const [ pokemonBalance, setPokemonBalance ] = useState<any>();
+    const [ provider, setProvider ] = useState<any>(null);
+    const [ ethAccount, setEthAccount ] = useState<any>(null);
+    const [ isMetamaskEnabled, setIsMetamaskEnabled ] = useState<any>(0);
 
     useEffect(() => {
         let strUserData = localStorage.getItem('userdata');
@@ -24,6 +27,13 @@ const Header = () => {
             setUserData(userData);
             setCurrentUser(userData);
             setUserId(userData?.user?.id);
+
+           if(window.ethereum) {
+            setProvider(window.ethereum);
+            setIsMetamaskEnabled(1);
+           } else {
+            setIsMetamaskEnabled(2);
+           }
         } 
 
         let accessToken = userData?.token;
@@ -36,18 +46,34 @@ const Header = () => {
             skipNegotiation: true,
             transport: HttpTransportType.WebSockets*/
         };
-
-        const newConnection = new HubConnectionBuilder()
+        /**
+         const newConnection = new HubConnectionBuilder()
             .withUrl("https://localhost:7214/signalrgameeventhub", options)
             .withAutomaticReconnect()
             .configureLogging(LogLevel.Information)
             .build();
 
         setConnection(newConnection);
+         * 
+         */
+
+        
     }, []);
 
     useEffect(() => {
-        if (connection) {
+        if (provider && typeof provider !== "undefined") {
+            provider.on('accountsChanged', async () => {
+                console.log('ethereum change happened');
+                getEthAccount();
+            });
+            getEthAccount();
+        }
+    }, [provider]);
+
+    useEffect(() => {
+        /**
+         * 
+         if (connection) {
             console.log({connection});
             connection.start()
                 .then(result => {
@@ -59,10 +85,13 @@ const Header = () => {
                 })
                 .catch(e => console.log('Connection failed: ', e));
         }
+         */
+        
     }, [connection])
 
     useEffect(() => {
-        console.log('11', userId);
+        /**
+         console.log('11', userId);
         if (userId && connectionId && connection) {
             mainService.updateConnectionId(userId, connectionId).then((res) => {
                 console.log('updated connection id');
@@ -72,6 +101,8 @@ const Header = () => {
                 });
             });
         }
+         */
+        
     }, [connectionId, connection, userId])
 
     const logoutUser = () => {
@@ -441,89 +472,94 @@ const Header = () => {
 
     const moneyContractAddress = "0xA17BB8896040B2383277cd3Dc7b871Adec5726ED";
 
+    const getEthAccount = () => {
+        provider.request({ method: "eth_requestAccounts" }).then(() => {
+            const web3 = new Web3(provider || "https://goerli.etherscan.io");
+            //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
+
+            web3.eth.getAccounts().then((accounts) => {
+                const account = accounts[0];
+                console.log('yes eth coming here::', account);
+                setEthAccount(account);
+            });
+            
+        });
+    }
+
+    useEffect(() => {
+        if (ethAccount && currentUser?.id) {
+            mainService.updatePublicKey(currentUser.id, ethAccount).then((updateSuccess) => {
+                console.log('user update success', {updateSuccess});
+            });
+        }
+    }, [ethAccount, currentUser]);
+
     const buyTokens = (type = 7, pkdtVal = 0) => {
-        if (currentUser) {
-            if (window.ethereum) {
-                let provider = window.ethereum;
-                console.log('typeof provider', typeof provider);
-                if (typeof provider !== "undefined") {
-                  provider.request({ method: "eth_requestAccounts" }).then(() => {
-                    const web3 = new Web3(provider || "https://goerli.etherscan.io");
-                    //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
-                    web3.eth.getAccounts().then((accounts) => {
-                        const account = accounts[0];
-                        console.log('account::::', accounts);
+        if (currentUser && provider && ethAccount) {
+            provider.request({ method: "eth_requestAccounts" }).then(() => {
+                const web3 = new Web3(provider || "https://goerli.etherscan.io");
+                //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
 
-                        mainService.updatePublicKey(currentUser.id, account).then((updateSuccess) => {
-                            console.log('user update success', {updateSuccess});
-                        });
+                const contract: any = new web3.eth.Contract(gameContractABI, moneyContractAddress);
+                    console.log('contract comes::', contract);
 
-                        const contract: any = new web3.eth.Contract(gameContractABI, moneyContractAddress);
-                        console.log('contract comes::', contract);
-
-                        /**
-                         * 
-                         contract.methods.buy().call(1).then((res: any) => {
-                            console.log('resresres:', res);
-                        });
-                        */
-                        if (type === 1 && pkdtVal > 0) {
-                            contract.methods.buy().send({from: account, value: pkdtVal}).then((res: any) => {
-                                console.log('resres::', {res});
-                                buyTokens();
-                            }).catch((error: any) => {
-                                console.log('error:::', {error});
-                            });
-                        } else if (type === 2) {
-                            //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
-                            contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", account, 10).send({from: account}).then((res: any) => {
-                                console.log('coming here123::', res);
-                                buyTokens();
-                            });
-                        }  else if (type === 3) {
-                            //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
-                            contract.methods.approveSpenderFromOwner(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 50).send({from: account}).then((res: any) => {
-                                console.log('coming here123::', res);
-                                buyTokens(4);
-                            });
-                        } else if (type === 4) {
-                            //contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
-                            contract.methods.getAllowance(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").call({from: account}).then((res: any) => {
-                                console.log('getAllowance', res);
-                            });
-                        }  else if (type === 5) {
-                            contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",account, 10).send({from: account}).then((res: any) => {
-                                console.log('getAllowance', res);
-                            });
-                        } else if (type === 6) {
-                            //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
-                            let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
-                            if (gameAccept?.opuserpublickey === account) {
-                                console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account});
-                                wonPublicKey = gameAccept?.startuserpublickey;
-                            } else {
-                                console.log('coming here startuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account});
-                                wonPublicKey = gameAccept?.opuserpublickey;
-                            }
-
-                            mainService.transferCoinsToWinner(account, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
-                                console.log({res});
-                                buyTokens();
-                            });
-                        } else {
-                            contract.methods.currentBalance().call({from: account}).then((res: any) => {
-                                console.log('resresres:', res);
-                                setPokemonBalance(res);
-                            });
-                        }
-                        
+                /**
+                     * 
+                     contract.methods.buy().call(1).then((res: any) => {
+                        console.log('resresres:', res);
                     });
-                    
-                  });
+                    */
+                if (type === 1 && pkdtVal > 0) {
+                    contract.methods.buy().send({from: ethAccount, value: pkdtVal}).then((res: any) => {
+                        console.log('resres::', {res});
+                        buyTokens();
+                    }).catch((error: any) => {
+                        console.log('error:::', {error});
+                    });
+                } else if (type === 2) {
+                    //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
+                    contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", ethAccount, 10).send({from: ethAccount}).then((res: any) => {
+                        console.log('coming here123::', res);
+                        buyTokens();
+                    });
+                }  else if (type === 3) {
+                    //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
+                    contract.methods.approveSpenderFromOwner(ethAccount, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 50).send({from: ethAccount}).then((res: any) => {
+                        console.log('coming here123::', res);
+                        buyTokens(4);
+                    });
+                } else if (type === 4) {
+                    //contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
+                    contract.methods.getAllowance(ethAccount, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").call({from: ethAccount}).then((res: any) => {
+                        console.log('getAllowance', res);
+                    });
+                }  else if (type === 5) {
+                    contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",ethAccount, 10).send({from: ethAccount}).then((res: any) => {
+                        console.log('getAllowance', res);
+                    });
+                } else if (type === 6) {
+                    //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
+                    let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
+                    if (gameAccept?.opuserpublickey === ethAccount) {
+                        console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = gameAccept?.startuserpublickey;
+                    } else {
+                        console.log('coming here startuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = gameAccept?.opuserpublickey;
+                    }
+
+                    mainService.transferCoinsToWinner(ethAccount, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
+                        console.log({res});
+                        buyTokens();
+                    });
                 } else {
-                  console.log("Non-ethereum browser detected.Please install Metamask");
+                    contract.methods.currentBalance().call({from: ethAccount}).then((res: any) => {
+                        console.log('resresres:', res);
+                        setPokemonBalance(res);
+                    });
                 }
-            }
+                
+            });
         }
     }
 
@@ -550,9 +586,6 @@ const Header = () => {
                     </li>
                     <li>
                         <Link to="/">Login</Link>
-                    </li>
-                    <li>
-                        <button onClick={onWeb3Connect}>Connect to metamask</button>
                     </li>
                     {userData ? (
                         <>

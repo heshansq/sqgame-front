@@ -21,45 +21,65 @@ const Home = () => {
     const [ gameSuccessStart, setGameSuccessStart ] = useState<any>();
     const [ gameAccept, setGameAccept ] = useState<any>();
     const [ pokemonBalance, setPokemonBalance ] = useState();
+    const [ provider, setProvider ] = useState<any>(null);
+    const [ ethAccount, setEthAccount ] = useState<any>(null);
+    const [ isMetamaskEnabled, setIsMetamaskEnabled ] = useState<any>(0);
+    const [ isStartGame, setIsStartGame ] = useState<any>(0);
 
     useEffect(() => {
         let strUserData = localStorage.getItem('userdata');
         let userData;
         if (strUserData) {
             userData = JSON.parse(strUserData);
+            console.log('user data::', userData);
+            let accessToken = userData.token;
+            if (userData?.user?.id) {
+                setUserId(userData?.user?.id);
+                setCurrentUser(userData?.user);
+
+                if(window.ethereum) {
+                    setProvider(window.ethereum);
+                    setIsMetamaskEnabled(1);
+                } else {
+                    setIsMetamaskEnabled(2);
+                }
+            }
+
+            const options: IHttpConnectionOptions = {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+                /*,
+                skipNegotiation: true,
+                transport: HttpTransportType.WebSockets*/
+            };
+
+            const newConnection = new HubConnectionBuilder()
+                .withUrl("https://localhost:7214/signalrgameeventhub", options)
+                .withAutomaticReconnect()
+                .configureLogging(LogLevel.Information)
+                .build();
+
+            setConnection(newConnection);
+
+            mainService.getAllOnlineUsers().then((users: any) => {
+                console.log('all online users:::', users);
+                setOnlineUsers(users?.data ?? []);
+            });
         } else {
             navigate('/');
         }
-        console.log('user data::', userData);
-        let accessToken = userData.token;
-        if (userData?.user?.id) {
-            setUserId(userData?.user?.id);
-            setCurrentUser(userData?.user);
-        }
-
-        const options: IHttpConnectionOptions = {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-            /*,
-            skipNegotiation: true,
-            transport: HttpTransportType.WebSockets*/
-        };
-
-        const newConnection = new HubConnectionBuilder()
-            .withUrl("https://localhost:7214/signalrgameeventhub", options)
-            .withAutomaticReconnect()
-            .configureLogging(LogLevel.Information)
-            .build();
-
-        setConnection(newConnection);
-
-        mainService.getAllOnlineUsers().then((users: any) => {
-            console.log('all online users:::', users);
-            setOnlineUsers(users?.data ?? []);
-        });
-
     }, []);
+
+    useEffect(() => {
+        if (provider && typeof provider !== "undefined") {
+            provider.on('accountsChanged', async () => {
+                console.log('ethereum change happened');
+                getEthAccount();
+            });
+            getEthAccount();
+        }
+    }, [provider]);
 
     useEffect(() => {
         if (connection) {
@@ -92,6 +112,7 @@ const Home = () => {
                 connection.on('gameAccept', data => {
                     console.log('gameAccept response data::', JSON.parse(data));
                     setGameAccept(JSON.parse(data));
+                    setIsStartGame(4);
                 });
             });
         }
@@ -108,11 +129,8 @@ const Home = () => {
         let gameName = e.target[0].value;
 
         let game: Game = {gamename: gameName, type: 1, status: 1, gamestartuser: currentUser.id, gameopponent: startGame.opponent.id};
-        mainService.startGame(game).then((response: any) => {
-            console.log('response:::', {response});
-            setGameSuccessStart(response);
-            onStartTheGame();
-        });
+        onStartTheGame(game);
+        
         console.log('game data:::', game);
     }
 
@@ -428,89 +446,113 @@ const Home = () => {
 
     const moneyContractAddress = "0xA17BB8896040B2383277cd3Dc7b871Adec5726ED";
 
-    const buyTokens = (type = 7, pkdtVal = 0) => {
-        if (currentUser) {
-            if (window.ethereum) {
-                let provider = window.ethereum;
-                console.log('typeof provider', typeof provider);
-                if (typeof provider !== "undefined") {
-                  provider.request({ method: "eth_requestAccounts" }).then(() => {
-                    const web3 = new Web3(provider || "https://goerli.etherscan.io");
-                    //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
-                    web3.eth.getAccounts().then((accounts) => {
-                        const account = accounts[0];
-                        console.log('account::::', accounts);
+    const getEthAccount = () => {
+        provider.request({ method: "eth_requestAccounts" }).then(() => {
+            const web3 = new Web3(provider || "https://goerli.etherscan.io");
+            //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
 
-                        mainService.updatePublicKey(currentUser.id, account).then((updateSuccess) => {
-                            console.log('user update success', {updateSuccess});
-                        });
+            web3.eth.getAccounts().then((accounts) => {
+                const account = accounts[0];
+                console.log('yes eth coming here::', account);
+                setEthAccount(account);
+            });
+            
+        });
+    }
 
-                        const contract: any = new web3.eth.Contract(gameContractABI, moneyContractAddress);
-                        console.log('contract comes::', contract);
+    useEffect(() => {
+        if (ethAccount && currentUser?.id) {
+            mainService.updatePublicKey(currentUser.id, ethAccount).then((updateSuccess) => {
+                console.log('user update success', {updateSuccess});
+                buyTokens();
+            });
+        }
+    }, [ethAccount, currentUser]);
 
-                        /**
-                         * 
-                         contract.methods.buy().call(1).then((res: any) => {
-                            console.log('resresres:', res);
-                        });
-                        */
-                        if (type === 1 && pkdtVal > 0) {
-                            contract.methods.buy().send({from: account, value: pkdtVal}).then((res: any) => {
-                                console.log('resres::', {res});
-                                buyTokens();
-                            }).catch((error: any) => {
-                                console.log('error:::', {error});
-                            });
-                        } else if (type === 2) {
-                            //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
-                            contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", account, 10).send({from: account}).then((res: any) => {
-                                console.log('coming here123::', res);
-                                buyTokens();
-                            });
-                        }  else if (type === 3) {
-                            //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
-                            contract.methods.approveSpenderFromOwner(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 50).send({from: account}).then((res: any) => {
-                                console.log('coming here123::', res);
-                                buyTokens(4);
-                            });
-                        } else if (type === 4) {
-                            //contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
-                            contract.methods.getAllowance(account, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").call({from: account}).then((res: any) => {
-                                console.log('getAllowance', res);
-                            });
-                        }  else if (type === 5) {
-                            contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",account, 10).send({from: account}).then((res: any) => {
-                                console.log('getAllowance', res);
-                            });
-                        } else if (type === 6) {
-                            //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
-                            let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
-                            if (gameAccept?.opuserpublickey === account) {
-                                console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account}, {startpublickey: gameAccept?.startuserpublickey});
-                                wonPublicKey = gameAccept?.startuserpublickey;
-                            } else {
-                                console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {account}, {startpublickey: gameAccept?.startuserpublickey});
-                                wonPublicKey = gameAccept?.opuserpublickey;
-                            }
+    const buyTokens = (type = 7, pkdtVal = 0, gameStartData = null, acceptGame: any = null) => {
+        if (currentUser && provider && ethAccount) {
+            provider.request({ method: "eth_requestAccounts" }).then(() => {
+                const web3 = new Web3(provider || "https://goerli.etherscan.io");
+                //const web3 = new Web3(provider || "https://mumbai.polygonscan.com/");
 
-                            mainService.transferCoinsToWinner(account, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
-                                console.log({res});
-                                buyTokens();
-                            });
-                        } else {
-                            contract.methods.currentBalance().call({from: account}).then((res: any) => {
-                                console.log('resresres:', res);
-                                setPokemonBalance(res);
+                const contract: any = new web3.eth.Contract(gameContractABI, moneyContractAddress);
+                    console.log('contract comes::', contract);
+
+                /**
+                     * 
+                     contract.methods.buy().call(1).then((res: any) => {
+                        console.log('resresres:', res);
+                    });
+                    */
+                if (type === 1 && pkdtVal > 0) {
+                    contract.methods.buy().send({from: ethAccount, value: pkdtVal}).then((res: any) => {
+                        console.log('resres::', {res});
+                        buyTokens();
+                    }).catch((error: any) => {
+                        console.log('error:::', {error});
+                    });
+                } else if (type === 2) {
+                    //contract.methods.transferSingleTokenToWinner("0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", account, 1).send({from: account}).then((res: any) => {
+                    contract.methods.transferSingleTokenToWinner("0x64670508d670a88536c5fB36AbDE75D2a16475f0", ethAccount, 10).send({from: ethAccount}).then((res: any) => {
+                        console.log('coming here123::', res);
+                        buyTokens();
+                    });
+                }  else if (type === 3) {
+                    //contract.methods.approveSpenderFromOwner(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5", 5).send({from: account}).then((res: any) => {
+                    contract.methods.approveSpenderFromOwner(ethAccount, "0x64670508d670a88536c5fB36AbDE75D2a16475f0", 50).send({from: ethAccount}).then((res: any) => {
+                        console.log('coming here123::', res);
+                        buyTokens(4);
+                        setIsStartGame(2);
+                        if (gameStartData) {
+                            mainService.startGame(gameStartData).then((response: any) => {
+                                console.log('response:::', {response});
+                                setGameSuccessStart(response);
+                                setIsStartGame(3);
                             });
                         }
-                        
+
+                        if (acceptGame) {
+                            setIsStartGame(2);
+                            mainService.acceptGameRequest(acceptGame?.userId, acceptGame?.gameId).then((res: any) => {
+                                console.log('Accepted', {res});
+                                setIsStartGame(3);
+                            });
+                        }
+                    }).catch((e: any) => {
+                        setIsStartGame(5);
                     });
-                    
-                  });
+                } else if (type === 4) {
+                    //contract.methods.getAllowance(account, "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").call({from: account}).then((res: any) => {
+                    contract.methods.getAllowance(ethAccount, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").call({from: ethAccount}).then((res: any) => {
+                        console.log('getAllowance', res);
+                    });
+                }  else if (type === 5) {
+                    contract.methods.transferSingleTokenToWinnerWithSpender("0x772f554D67ed897e9e350E7ab158c7d20C534cCb", "0x1cd68536C6B598605e12e1c0290E52E567bEA234",ethAccount, 10).send({from: ethAccount}).then((res: any) => {
+                        console.log('getAllowance', res);
+                    });
+                } else if (type === 6) {
+                    //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
+                    let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
+                    if (gameAccept?.opuserpublickey === ethAccount) {
+                        console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = gameAccept?.startuserpublickey;
+                    } else {
+                        console.log('coming here startuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = gameAccept?.opuserpublickey;
+                    }
+
+                    mainService.transferCoinsToWinner(ethAccount, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
+                        console.log({res});
+                        buyTokens();
+                    });
                 } else {
-                  console.log("Non-ethereum browser detected.Please install Metamask");
+                    contract.methods.currentBalance().call({from: ethAccount}).then((res: any) => {
+                        console.log('resresres:', res);
+                        setPokemonBalance(res);
+                    });
                 }
-            }
+                
+            });
         }
     }
 
@@ -523,8 +565,11 @@ const Home = () => {
         }
     }
 
-    const onStartTheGame = () => {
-        buyTokens(3);
+    const onStartTheGame = (gameStartData: any = null, acceptGame: any = null) => {
+        if (gameStartData || acceptGame) {
+            setIsStartGame(1);
+        }
+        buyTokens(3, 0, gameStartData, acceptGame);
     }
 
     const onLostGame = () => {
@@ -534,18 +579,18 @@ const Home = () => {
     const onGameRequest = (isStart = false) => {
         if (isStart && userId) {
             console.log({newGameBegin});
-            mainService.acceptGameRequest(userId, newGameBegin?.gameId).then((res: any) => {
+            onStartTheGame(null, {userId, gameId: newGameBegin?.gameId});
+            /**
+             mainService.acceptGameRequest(userId, newGameBegin?.gameId).then((res: any) => {
                 console.log('Accepted', {res});
                 onStartTheGame();
             });
+             * 
+             */
+            
         }
     }
 
-    useEffect(() => {
-        if (currentUser) {
-            buyTokens();
-        }
-    }, [currentUser]);
 
     return (
         <>
@@ -567,11 +612,16 @@ const Home = () => {
                             <input type="text" placeholder="Enter PKTD Amount"/>
                             <button>Buy PokemonTD</button>
                         </form>
-                        <br/>
-                        <button onClick={onStartTheGame}>Start the Game</button>
+                        {
+                            /**
+                              <br/>
+                        <button onClick={() => {onStartTheGame()}}>Start the Game</button>
                         <button onClick={onLostGame}>I Lost the Game</button>
                         <button onClick={() => {buyTokens(4)}}>Get Allowance</button>
                         <button onClick={() => {buyTokens(5)}}>Spend</button>
+                             * 
+                             */
+                        }
                     </>
                 ) : null}
                 <div>
@@ -593,17 +643,40 @@ const Home = () => {
                     ) : null}
                     
                 </div>
+
+                {
+                    isStartGame === 1 ? (
+                        <p>
+                            Initiating the game!
+                        </p>
+                    ) : (isStartGame === 2) ? (
+                        <p>
+                            Starting the game!
+                        </p>
+                    ) : (isStartGame === 3) ? (
+                        <p>
+                            Waiting for the opponent!
+                        </p>
+                    ) : (isStartGame === 4) ? (
+                        <p>
+                            Let the game begin
+                        </p>
+                    ) : (isStartGame === 5) ? (
+                        <p>
+                            User Cancelled or Error Occured
+                        </p>
+                    ) : null
+                }
+
                 {(!gameSuccessStart && newGameBegin && !gameAccept) ? (
                     <>
                         You have Received new Game Request, Do you want to Accept it?
-                        <button onClick={() => { onGameRequest(true) }}>Accept</button>
-                        <button>Reject</button>
+                        <button disabled={isStartGame !== 0 && isStartGame !== 5} onClick={() => { onGameRequest(true) }}>Accept</button>
+                        <button disabled={isStartGame !== 0 && isStartGame !== 5}>Reject</button>
                     </>
                 ) : null}
                 {(gameSuccessStart ? (
-                    <p>
-                        Waiting for the opponent!
-                    </p>
+                    <></>
                 ) : (
                     <>
                         {(startGame?.opponent?.name ? (
@@ -613,7 +686,7 @@ const Home = () => {
                                 </label>
                                 <form onSubmit={onStartGame}>
                                     <input type="text" placeholder="Enter Game Name"/>
-                                    <input type="submit" value="Start Game"/>
+                                    <input disabled={isStartGame !== 0 && isStartGame !== 5} type="submit" value="Start Game"/>
                                 </form>
                             </div>
                         ) : null)}
