@@ -25,6 +25,8 @@ const Home = () => {
     const [ ethAccount, setEthAccount ] = useState<any>(null);
     const [ isMetamaskEnabled, setIsMetamaskEnabled ] = useState<any>(0);
     const [ isStartGame, setIsStartGame ] = useState<any>(0);
+    const [gameFinished, setGameFinished] = useState<any>(null);
+    
 
     useEffect(() => {
         let strUserData = localStorage.getItem('userdata');
@@ -113,6 +115,18 @@ const Home = () => {
                     console.log('gameAccept response data::', JSON.parse(data));
                     setGameAccept(JSON.parse(data));
                     setIsStartGame(4);
+                });
+
+                connection.on('gameWon', data => {
+                    let userWinObj = JSON.parse(data);
+                    setGameAccept(userWinObj);
+                    console.log('gameAccept:::', {gameAccept});
+                    console.log('gameWon response data::', JSON.parse(data));
+                    setGameFinished(userWinObj);
+                    if (userWinObj?.winnerUser?.Id !== userId) {
+                        console.log("Yes I Lost The Game");
+                        buyTokens(6, 0, null, null, userWinObj);
+                    }
                 });
             });
         }
@@ -469,7 +483,7 @@ const Home = () => {
         }
     }, [ethAccount, currentUser]);
 
-    const buyTokens = (type = 7, pkdtVal = 0, gameStartData = null, acceptGame: any = null) => {
+    const buyTokens = (type = 7, pkdtVal = 0, gameStartData = null, acceptGame: any = null, afterAcceptData: any = null) => {
         if (currentUser && provider && ethAccount) {
             provider.request({ method: "eth_requestAccounts" }).then(() => {
                 const web3 = new Web3(provider || "https://goerli.etherscan.io");
@@ -533,18 +547,30 @@ const Home = () => {
                 } else if (type === 6) {
                     //mainService.transferCoinsToWinner(account, "0x9D77cfbf4567945eE4a27334Cec11aBB865E31eF", "0x950B4aF4Cf7a7933A63866a09Ef1D31b0F8500e5").then((res: any) => {
                     let wonPublicKey = "0xB4905829f61E9621Ef4a3bb1D516C26fd0695FD4";
-                    if (gameAccept?.opuserpublickey === ethAccount) {
-                        console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
-                        wonPublicKey = gameAccept?.startuserpublickey;
+                    let user1StartPublicKey, user1OpPublicKey;
+                    console.log('afterAcceptData::::', {afterAcceptData});
+                    if (gameAccept) {
+                        user1StartPublicKey = gameAccept?.startuserpublickey;
+                        user1OpPublicKey = gameAccept?.opuserpublickey;
+
                     } else {
-                        console.log('coming here startuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
-                        wonPublicKey = gameAccept?.opuserpublickey;
+                        user1StartPublicKey = afterAcceptData?.startuserpublickey;
+                        user1OpPublicKey = afterAcceptData?.opuserpublickey;
                     }
 
-                    mainService.transferCoinsToWinner(ethAccount, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
+                    if (gameAccept?.opuserpublickey === ethAccount) {
+                        console.log('coming here opuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = user1StartPublicKey;
+                    } else {
+                        console.log('coming here startuserpublickey', {opuserpublickey: gameAccept?.opuserpublickey}, {ethAccount});
+                        wonPublicKey = user1OpPublicKey;
+                    }
+                
+                     mainService.transferCoinsToWinner(ethAccount, wonPublicKey, "0x64670508d670a88536c5fB36AbDE75D2a16475f0").then((res: any) => {
                         console.log({res});
                         buyTokens();
                     });
+                    
                 } else {
                     contract.methods.currentBalance().call({from: ethAccount}).then((res: any) => {
                         console.log('resresres:', res);
@@ -694,8 +720,20 @@ const Home = () => {
                 ))}
                 {(gameAccept ? (
                     <>
-                        <button onClick={onLostGame}>I Won the Game</button>
-                        <button onClick={onLostGame}>I Lost the Game</button>
+                        {
+                            gameFinished ? (
+                                <>
+                                    <p>
+                                        {gameFinished?.winnerUser?.name} won the game!
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={onLostGame}>I Won the Game</button>
+                                    <button onClick={onLostGame}>I Lost the Game</button>
+                                </>
+                            )
+                        }
                     </>
                 ) : null)}
                 
