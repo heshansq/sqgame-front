@@ -1,0 +1,39 @@
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  background-image: url("../public/background.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.App {
+  display: flex;
+  justify-content: center;
+  padding: 50px 50px;
+}
+p, h1, h2, h3, label, input, textarea, button, li {
+  font-family: Arial, Helvetica, sans-serif;
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+p, label, input, textarea, button, li {
+  font-size: 1rem;
+}
+input, textarea, button {
+  padding: 3px 6px;
+}
+.display-linebreak {
+  white-space: pre-line;
+}

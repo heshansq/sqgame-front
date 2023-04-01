@@ -1,0 +1,29 @@
+.pokedex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  .entry {
+    display: flex;
+    flex-direction: column;
+    max-width: 33%;
+    padding: 10px;
+    border: 10px #333 solid;
+    border-radius: 15px;
+    box-sizing: border-box;
+    h3 {
+      margin: 0px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .types {
+      display: flex;
+      input {
+        max-width: 50%;
+      }
+    }
+  }
+}

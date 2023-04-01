@@ -1,0 +1,40 @@
+.area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 15px;
+  padding: 0px 20px 10px 20px;
+  border: 1px solid #666;
+  border-radius: 20px;
+  box-sizing: border-box;
+  &-header {
+    padding: 0px 10px;
+    background-color: #fff;
+    transform: translate(0, -50%);
+    h2 {
+      margin: 0px;
+    }
+  }
+  &-trainers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    padding: 0px 10px 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    box-sizing: border-box;
+    &-header {
+      padding: 0px 10px;
+      background-color: #fff;
+      transform: translate(0, -50%);
+      h3 {
+        margin: 0px;
+      }
+    }
+  }
+}

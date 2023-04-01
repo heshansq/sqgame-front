@@ -1,0 +1,35 @@
+$size: 60px;
+
+.trainer-area-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0px 5px 10px;
+  border-radius: 15px;
+  cursor: pointer;
+  .trainer-area-team {
+    display: flex;
+    .trainer-pokemon {
+      display: flex;
+      flex-direction: column;
+      width: $size;
+      margin: 0px 5px;
+      .trainer-pokemon-unknown, img, .empty-slot {
+        width: $size;
+        height: $size;
+      }
+      p {
+        text-align: center;
+        margin: 0px;
+      }
+      .empty-slot {
+        background-color: #fafafa;
+        border-radius: 10px;
+      }
+    }
+  }
+}
+.trainer-area-item:hover {
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.5);
+}
